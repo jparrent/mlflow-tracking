@@ -12,14 +12,30 @@ mlflow-tracking/
 │   ├── processed/
 │   └── raw/
 │       └── placeholder_data.csv
+├── notebooks/
 ├── src/
 │   ├── data_cleaner.py
+│   ├── custom_data_cleaner/
+│   │   ├── __init__.py
+│   │   └── AccidentDataCleaner.py
 │   ├── data_loader.py
+│   ├── custom_data_loader/
+│   │   ├── __init__.py
+│   │   └── CSVDataLoader.py
 │   ├── feature_engineer.py
+│   ├── custom_feature_engineer/
+│   │   ├── __init__.py
+│   │   └── AccidentFeatureEngineer.py
 │   ├── model_trainer.py
-│   └── run.py
+│   ├── custom_model_trainer/
+│   │   ├── __init__.py
+│   │   └── XGBoostModelTrainer.py
+│   ├── run.py
+│   └── config.yaml
 ├── plots/
 ├── requirements.txt
+├── .gitignore
+├── LICENSE
 └── README.md
 ```
 
