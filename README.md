@@ -111,7 +111,8 @@ The main script that ties together the data loading, cleaning, feature engineeri
 ## Data
 
 The data used in this project is a placeholder obtained from a recent interview to set up a larger personal ML/DS workflow. The goal is to create a flexible framework that can be easily adapted to different datasets and machine learning tasks. The current data cleaning and feature engineering steps are basic and meant to be expanded upon for more complex projects.
-Future Work
+
+## Future Work
 
 - Custom Algorithms: Make it easier to swap out algorithms and customize the ModelTrainer.
 - Modularization: Further modularize the codebase to support easier integration of new components.
