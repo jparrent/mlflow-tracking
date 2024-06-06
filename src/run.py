@@ -1,17 +1,21 @@
 import os
 from pathlib import Path
 import pandas as pd
-from sklearn.model_selection import train_test_split
-from data_loader import DataLoader
-from data_cleaner import DataCleaner
-from feature_engineer import FeatureEngineer
-from model_trainer import ModelTrainer
+from custom_data_loader import create_data_loader
+from custom_data_cleaner import create_data_cleaner
+from custom_feature_engineer import create_feature_engineer
+from custom_model_trainer import create_model_trainer
+import yaml
+import time
 
+# Read and parse the YAML configuration file
+with open('config.yaml', 'r') as file:
+    config = yaml.safe_load(file)
 
 def main():
-    """
-    Main function to load, clean, engineer features, train, evaluate, and log the model.
-    """
+    target = 'DAMAGE'
+    model_run_name = 'initial_model'
+
     # Set up directories
     current_directory: Path = Path.cwd()
     home_directory: Path = current_directory.parent
@@ -23,49 +27,56 @@ def main():
     os.makedirs(plots_directory, exist_ok=True)
 
     # Load or preprocess the data
-    processed_data_file = processed_data_directory / 'processed_data.csv'
+    processed_data_file = processed_data_directory / 'processed_data.pkl'
     if processed_data_file.exists():
         # Load processed data if it exists
-        df = pd.read_csv(processed_data_file)
+        print('Loading already cleaned data.')
+        df_features = pd.read_pickle(processed_data_file)
     else:
-        # Load the raw data
-        data_loader = DataLoader(data_directory)
-        df: pd.DataFrame = data_loader.load_data('chicago_traffic_data_slim.csv')
+        # Dynamically import and use data loader based on configuration
+        for data_loader in config.get('data_loaders', []):
+            loader_instance = create_data_loader(data_loader)
+            print("Loading Data...")
+            start_time = time.time()
+            df = loader_instance(data_directory / 'chicago_traffic_data_slim.csv').load_data()
+            end_time = time.time()
+            print(f"Data loaded using {data_loader}. Time taken: {end_time - start_time:.2f} seconds")
 
         # Inspect the raw data
-        print("Columns in raw data:")
-        print(df.columns)
+        print(f"Columns in raw data: {df.columns}")
 
-        # Clean the data
-        data_cleaner = DataCleaner(df)
-        df_clean: pd.DataFrame = data_cleaner.clean_data()
+        # Dynamically import and use data cleaner based on configuration
+        for data_cleaner in config.get('data_cleaners', []):
+            cleaner_instance = create_data_cleaner(data_cleaner)
+            print("Cleaning Data...")
+            start_time = time.time()
+            df = cleaner_instance(df).clean_data()
+            end_time = time.time()
+            print(f"Data cleaned using {data_cleaner}. Time taken: {end_time - start_time:.2f} seconds")
 
-        # Feature engineering
-        feature_engineer = FeatureEngineer(df_clean)
-        df_features: pd.DataFrame = feature_engineer.engineer_features()
+        # Dynamically import and use feature engineer based on configuration
+        for feature_engineer in config.get('feature_engineers', []):
+            feature_engineer_instance = create_feature_engineer(feature_engineer)
+            print('Engineering Features...')
+            start_time = time.time()
+            df_features = feature_engineer_instance(df, target).engineer_features()
+            end_time = time.time()
+            print(f"Feature engineering completed. Time taken: {end_time - start_time:.2f} seconds")
 
         # Save processed data
-        df_features.to_csv(processed_data_file, index=False)
+        print('Saveing Processed Data...')
+        df_features.to_pickle(processed_data_file)
 
-    # Encode categorical features
-    df_encoded, target_map = feature_engineer.encode_categorical_features(df_features, 'DAMAGE')
-
-    # Balance the dataset
-    X_resampled, y_resampled = feature_engineer.balance_data(df_encoded, 'DAMAGE_CODE')
-
-    # Prepare for modeling
-    X_train, X_test, y_train, y_test = train_test_split(X_resampled, y_resampled, test_size=0.2, random_state=42)
-
-    # Initialize the model trainer
-    model_trainer = ModelTrainer(X_train, X_test, y_train, y_test, plots_directory, target_map)
-
-    # Train and evaluate the model
-    best_params, model = model_trainer.train_model()
-    model_trainer.evaluate_model(model, best_params)
-
-    # Log the model with MLflow
-    model_trainer.log_model(model, best_params, 'DAMAGE', 'initial_model')
-
+    # Dynamically import and use model trainer based on configuration
+    for model_trainer in config.get('model_trainers', []):
+        model_trainer_instance = create_model_trainer(model_trainer)
+        print('Training Model...')
+        start_time = time.time()
+        model_trainer_instance(df_features, target, model_run_name, plots_directory).train_model()
+        end_time = time.time()
+        print(f"Modeling completed. Time taken: {end_time - start_time}")
 
 if __name__ == '__main__':
+    # Start MLFlow before running
+    # mlflow server --host ###.#.#.# --port #### --backend-store-uri sqlite:///model_tracking.db
     main()

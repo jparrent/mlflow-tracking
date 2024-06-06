@@ -1,0 +1,8 @@
+data_loaders:
+  - CSVDataLoader
+data_cleaners:
+  - AccidentDataCleaner
+feature_engineers:
+  - AccidentFeatureEngineer
+model_trainers:
+  - XGBoostModelTrainer

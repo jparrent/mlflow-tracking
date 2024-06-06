@@ -1,1 +1,4 @@
-sci-traffic/mlartifacts/
+mlartifacts/
+model_tracking.db
+**/__pycache__/
+*.py[cod]
