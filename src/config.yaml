@@ -1,8 +1,23 @@
+model_run_name: "AccidentSeverityPrediction"
 data_loaders:
-  - CSVDataLoader
+  - name: CSVDataLoader
+    params:
+      file_name: "chicago_traffic_data_slim.csv"
 data_cleaners:
-  - AccidentDataCleaner
+  - name: AccidentDataCleaner
 feature_engineers:
-  - AccidentFeatureEngineer
+  - name: AccidentFeatureEngineer
 model_trainers:
-  - XGBoostModelTrainer
+  - name: XGBoostModelTrainer
+    params:
+      max_depth: [10]
+      learning_rate: [0.1, 0.01]
+      n_estimators: [450, 500]
+    args:
+      enable_categorical: True
+      reg_alpha: 0
+      eval_metric: 'mlogloss'
+plotting:
+  - name: Plotting
+    params:
+      metric: 'mlogloss'
