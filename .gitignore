@@ -1,3 +1,7 @@
+data/processed/
+notebooks/.ipynb_checkpoints/
+notebooks/Untitled.ipynb
+plots/
 mlartifacts/
 model_tracking.db
 **/__pycache__/
